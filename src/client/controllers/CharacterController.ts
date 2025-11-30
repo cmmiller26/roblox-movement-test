@@ -1,10 +1,10 @@
-import { Controller, OnPhysics, OnStart } from "@flamework/core";
+import { Controller, OnStart, OnPhysics, OnRender } from "@flamework/core";
 import { ContextActionService, Players, UserInputService } from "@rbxts/services";
 import MovementCharacter from "client/classes/movement/MovementCharacter";
 import CameraController from "./CameraController";
 
 @Controller()
-class CharacterController implements OnStart, OnPhysics {
+class CharacterController implements OnStart, OnPhysics, OnRender {
 	private readonly player = Players.LocalPlayer;
 	private movementCharacter: MovementCharacter | undefined;
 
@@ -20,6 +20,14 @@ class CharacterController implements OnStart, OnPhysics {
 	onPhysics(dt: number): void {
 		const lookVector = this.cameraController.camera.CFrame.LookVector;
 		this.movementCharacter?.update(dt, new Vector3(lookVector.X, 0, lookVector.Z).Unit);
+	}
+
+	onRender(): void {
+		if (this.movementCharacter) {
+			this.cameraController.camera.CFrame = this.cameraController.camera.CFrame.mul(
+				CFrame.Angles(0, 0, math.rad(this.movementCharacter.cameraTiltZ.Value)),
+			);
+		}
 	}
 
 	private setupControls(): void {

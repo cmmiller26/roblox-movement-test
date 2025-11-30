@@ -8,12 +8,16 @@ import {
 	SLIDING_OFFSET,
 	WALL_RUN_GROUND_OFFSET,
 	COLLISION_PART_TWEEN_TIME,
+	CAMERA_OFFSET_TWEEN_TIME,
+	WALL_RUN_CAMERA_TILT_ANGLE,
 } from "shared/constants/Movement";
-import { MovementStateContext, MovementStateType, CollisionPart } from "shared/types/Movement";
+import { MovementStateContext, MovementStateType, CollisionPart, WallDirection } from "shared/types/Movement";
 import MovementStateMachine from "./MovementStateMachine";
 
 class MovementCharacter implements MovementStateContext {
 	lastJumpTick = 0;
+
+	cameraTiltZ = new Instance("NumberValue");
 
 	private stateMachine: MovementStateMachine;
 
@@ -123,7 +127,7 @@ class MovementCharacter implements MovementStateContext {
 			this.groundSensor.SensedPart = raycastResult.Instance;
 		}
 
-		Gizmos.drawBlockcast(cframe, size, direction, raycastResult);
+		//Gizmos.drawBlockcast(cframe, size, direction, raycastResult);
 
 		return raycastResult;
 	}
@@ -139,11 +143,11 @@ class MovementCharacter implements MovementStateContext {
 		return raycastResult;
 	}
 
-	performWallCheck(direction: "L" | "R"): RaycastResult | undefined {
+	performWallCheck(direction: WallDirection): RaycastResult | undefined {
 		const rootCFrame = this.character.GetPivot();
 
 		const origin = rootCFrame.Position;
-		const rayDir = rootCFrame.RightVector.mul(direction === "L" ? -1 : 1).mul(
+		const rayDir = rootCFrame.RightVector.mul(direction === WallDirection.Left ? -1 : 1).mul(
 			WALL_RUN_GROUND_OFFSET + WALL_SEARCH_DISTANCE,
 		);
 		const raycastResult = Workspace.Raycast(origin, rayDir, this.raycastParams);
@@ -219,6 +223,18 @@ class MovementCharacter implements MovementStateContext {
 		}
 	}
 
+	tiltCameraForWallRun(direction?: WallDirection): void {
+		let tiltAngle = 0;
+		if (direction === WallDirection.Left) {
+			tiltAngle = -WALL_RUN_CAMERA_TILT_ANGLE;
+		} else if (direction === WallDirection.Right) {
+			tiltAngle = WALL_RUN_CAMERA_TILT_ANGLE;
+		}
+		TweenService.Create(this.cameraTiltZ, new TweenInfo(CAMERA_OFFSET_TWEEN_TIME), {
+			Value: tiltAngle,
+		}).Play();
+	}
+
 	getMovementStateType(): MovementStateType {
 		return this.stateMachine.getMovementStateType();
 	}
@@ -246,7 +262,7 @@ class MovementCharacter implements MovementStateContext {
 	}
 
 	private tweenCameraOffset(offset: Vector3): void {
-		TweenService.Create(this.humanoid, new TweenInfo(0.1), {
+		TweenService.Create(this.humanoid, new TweenInfo(CAMERA_OFFSET_TWEEN_TIME), {
 			CameraOffset: offset,
 		}).Play();
 	}

@@ -1,5 +1,3 @@
-import { Flamework } from "@flamework/core";
-
 export enum MovementStateType {
 	Crouched = "Crouched",
 	CrouchFall = "CrouchFall",
@@ -31,9 +29,11 @@ export interface MovementStateContext {
 
 	performGroundCheck(): RaycastResult | undefined;
 	performCeilingCheck(offset: number): RaycastResult | undefined;
-	performWallCheck(direction: "L" | "R"): RaycastResult | undefined;
+	performWallCheck(direction: WallDirection): RaycastResult | undefined;
 
 	configCollisionPartForState(stateType?: MovementStateType, isCrouchFallLand?: boolean): void;
+
+	tiltCameraForWallRun(direction?: WallDirection): void;
 
 	getMovementStateType(): MovementStateType;
 
@@ -43,4 +43,9 @@ export interface MovementStateContext {
 
 export interface CollisionPart extends BasePart {
 	Weld: Weld;
+}
+
+export enum WallDirection {
+	Left = "Left",
+	Right = "Right",
 }

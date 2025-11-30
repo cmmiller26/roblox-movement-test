@@ -1,14 +1,20 @@
 import { Workspace } from "@rbxts/services";
-import { WALL_RUN_GROUND_OFFSET, WALL_RUNNING_SPEED } from "shared/constants/Movement";
-import { MovementStateType } from "shared/types/Movement";
+import { WALL_RUN_GROUND_OFFSET, WALL_RUNNING_SPEED, SPEED_TRANSITION_BUFFER } from "shared/constants/Movement";
+import { MovementStateType, WallDirection } from "shared/types/Movement";
 import MovementState from "./MovementState";
 
 class WallRunning extends MovementState {
 	readonly stateType = MovementStateType.WallRunning;
 
-	private wallSide: "L" | "R" = "L";
+	private wallSide: WallDirection = WallDirection.Left;
 
 	enter() {
+		const normal = this.context.wallSensor.HitNormal;
+		const velocity = this.context.rootPart.AssemblyLinearVelocity;
+		if (new Vector3(velocity.X, 0, velocity.Z).Magnitude < WALL_RUNNING_SPEED - SPEED_TRANSITION_BUFFER) {
+			return MovementStateType.Freefall;
+		}
+
 		this.context.humanoid.ChangeState(Enum.HumanoidStateType.Running);
 		this.context.controllerManager.ActiveController = this.context.groundController;
 
@@ -17,13 +23,17 @@ class WallRunning extends MovementState {
 
 		this.context.groundController.GroundOffset = WALL_RUN_GROUND_OFFSET;
 
-		const right = this.context.character.GetPivot().RightVector;
-		this.wallSide = this.context.wallSensor.HitNormal.Dot(right) > 0 ? "L" : "R";
+		this.wallSide =
+			this.context.wallSensor.HitNormal.Dot(this.context.character.GetPivot().RightVector) > 0
+				? WallDirection.Left
+				: WallDirection.Right;
 
-		const normal = this.context.wallSensor.HitNormal;
-		const velocity = this.context.rootPart.AssemblyLinearVelocity;
-		this.context.rootPart.ApplyImpulse(normal.mul(-velocity.Dot(normal) * this.context.mass));
-		this.context.rootPart.ApplyImpulse(Vector3.yAxis.mul(-velocity.Y * this.context.mass));
+		const parallelVelocity = velocity.sub(normal.mul(velocity.Dot(normal)));
+		this.context.rootPart.AssemblyLinearVelocity = new Vector3(parallelVelocity.X, 0, parallelVelocity.Z).Unit.mul(
+			velocity.Magnitude,
+		);
+
+		this.context.tiltCameraForWallRun(this.wallSide);
 
 		return undefined;
 	}
@@ -46,6 +56,8 @@ class WallRunning extends MovementState {
 		this.context.controllerManager.GroundSensor = this.context.groundSensor;
 
 		this.context.groundController.GroundOffset = this.context.humanoid.HipHeight;
+
+		this.context.tiltCameraForWallRun();
 
 		return true;
 	}

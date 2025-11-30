@@ -1,6 +1,6 @@
-import { MovementStateType } from "shared/types/Movement";
+import { MIN_JUMP_TIME } from "shared/constants/Movement";
+import { MovementStateType, WallDirection } from "shared/types/Movement";
 import MovementState from "./MovementState";
-import { SPEED_TRANSITION_BUFFER, MIN_JUMP_TIME, WALL_RUNNING_SPEED } from "shared/constants/Movement";
 
 class FreefallState extends MovementState {
 	readonly stateType = MovementStateType.Freefall;
@@ -24,8 +24,7 @@ class FreefallState extends MovementState {
 		if (
 			inputVector.Z < -0.5 &&
 			math.abs(inputVector.X) > 0.5 &&
-			this.context.rootPart.AssemblyLinearVelocity.Magnitude >= WALL_RUNNING_SPEED - SPEED_TRANSITION_BUFFER &&
-			this.context.performWallCheck(inputVector.X < 0 ? "L" : "R")
+			this.context.performWallCheck(inputVector.X < 0 ? WallDirection.Left : WallDirection.Right)
 		)
 			return MovementStateType.WallRunning;
 		return undefined;
