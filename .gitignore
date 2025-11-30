@@ -1,0 +1,14 @@
+# Dependencies
+/node_modules
+
+# Build outputs
+/out
+/include
+*.tsbuildinfo
+flamework.build
+
+# macOS
+.DS_Store
+
+# IDE
+/.vscode
