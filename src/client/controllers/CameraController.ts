@@ -10,7 +10,7 @@ class CameraController implements OnStart {
 
 	onStart() {
 		this.player.CameraMode = Enum.CameraMode.LockFirstPerson;
-		//Gizmos.enabled = false;
+		Gizmos.enabled = false;
 	}
 }
 

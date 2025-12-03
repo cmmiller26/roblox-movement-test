@@ -14,6 +14,7 @@ import {
 
 class MovementStateMachine {
 	private static readonly MAX_STATE_CHANGE_DEPTH = 5;
+	private static readonly STATE_CHANGE_WARNING_DEPTH = 2;
 
 	private readonly states: Record<MovementStateType, MovementState>;
 
@@ -45,6 +46,10 @@ class MovementStateMachine {
 		if (this.currentState.stateType === stateType) return;
 
 		if (depth === 0 && !this.currentState.exit(stateType)) return;
+
+		if (depth > MovementStateMachine.STATE_CHANGE_WARNING_DEPTH) {
+			warn(`State change depth exceeded ${MovementStateMachine.STATE_CHANGE_WARNING_DEPTH}`);
+		}
 		if (depth > MovementStateMachine.MAX_STATE_CHANGE_DEPTH) {
 			warn("Max state change depth exceeded");
 			return;

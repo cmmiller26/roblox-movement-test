@@ -1,4 +1,10 @@
-import { CROUCH_OFFSET, MIN_JUMP_TIME, CROUCH_FALL_DELAY } from "shared/constants/Movement";
+import { RunService } from "@rbxts/services";
+import {
+	CROUCH_OFFSET,
+	CROUCH_FALL_SETTLE_THRESHOLD,
+	CROUCH_FALL_MIN_SETTLE_TIME,
+	CROUCH_FALL_MAX_SETTLE_TIME,
+} from "shared/constants/Movement";
 import { MovementStateType } from "shared/types/Movement";
 import MovementState from "./MovementState";
 
@@ -8,6 +14,7 @@ class CrouchFallState extends MovementState {
 	enter() {
 		this.context.humanoid.ChangeState(Enum.HumanoidStateType.Freefall);
 		this.context.controllerManager.ActiveController = this.context.airController;
+		this.context.controllerManager.MovingDirection = Vector3.zero;
 
 		this.context.groundSensor.SensedPart = undefined;
 		this.context.groundController.GroundOffset = this.context.humanoid.HipHeight - CROUCH_OFFSET;
@@ -18,9 +25,9 @@ class CrouchFallState extends MovementState {
 	}
 
 	update() {
-		this.context.controllerManager.MovingDirection = this.context.humanoid.MoveDirection;
+		this.context.applyAirControlImpulse(this.context.humanoid.MoveDirection);
 
-		if (this.hasCompletedJump() && this.context.performGroundCheck()) {
+		if (this.context.hasCompletedJump() && this.context.performGroundCheck()) {
 			return MovementStateType.Landed;
 		}
 		if (!this.context.getToCrouch()) return MovementStateType.Freefall;
@@ -28,11 +35,10 @@ class CrouchFallState extends MovementState {
 	}
 
 	override exit(nextStateType?: MovementStateType) {
-		if (!this.hasCompletedJump() || !this.context.groundSensor.SensedPart) return false;
+		if (!this.context.hasCompletedJump() || !this.context.groundSensor.SensedPart) return false;
 
 		if (nextStateType === MovementStateType.Landed) {
-			// Delay resetting crouch properties to make crouch jumping easier
-			task.delay(CROUCH_FALL_DELAY, () => this.resetCrouchProperties(true));
+			this.beginSettleMonitoring();
 		} else {
 			this.resetCrouchProperties();
 		}
@@ -42,15 +48,25 @@ class CrouchFallState extends MovementState {
 
 	private resetCrouchProperties(delayed = false) {
 		this.context.groundController.GroundOffset = this.context.humanoid.HipHeight;
-		if (delayed) {
-			this.context.configCollisionPartForState(this.context.getMovementStateType(), true);
-		} else {
-			this.context.configCollisionPartForState();
-		}
+		this.context.configCollisionPartForState(delayed ? this.context.getMovementStateType() : undefined, delayed);
 	}
 
-	private hasCompletedJump(): boolean {
-		return os.clock() - this.context.lastJumpTick >= MIN_JUMP_TIME;
+	private beginSettleMonitoring() {
+		const startTime = os.clock();
+		const connection = RunService.PostSimulation.Connect(() => {
+			const velocityY = this.context.rootPart.AssemblyLinearVelocity.Y;
+			const elapsed = os.clock() - startTime;
+
+			// Only reset if minimum time has passed AND (velocity is settled OR max time reached)
+			// MIN_SETTLE_TIME ensures the GroundController has time to move the collision part upward after landing, even if velocity is already zero
+			const minTimeReached = elapsed >= CROUCH_FALL_MIN_SETTLE_TIME;
+			const velocitySettled = math.abs(velocityY) <= CROUCH_FALL_SETTLE_THRESHOLD;
+			const maxTimeReached = elapsed >= CROUCH_FALL_MAX_SETTLE_TIME;
+			if (minTimeReached && (velocitySettled || maxTimeReached)) {
+				this.resetCrouchProperties(true);
+				connection.Disconnect();
+			}
+		});
 	}
 }
 

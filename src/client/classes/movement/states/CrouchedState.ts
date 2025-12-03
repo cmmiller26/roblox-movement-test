@@ -1,11 +1,4 @@
-import {
-	CROUCH_OFFSET,
-	CROUCHED_SPEED,
-	RUNNING_SPEED,
-	SPEED_TRANSITION_BUFFER,
-	SLIDING_IMPULSE,
-	MAX_SLOPE_ANGLE,
-} from "shared/constants/Movement";
+import { CROUCH_OFFSET, CROUCHED_SPEED, RUNNING_SPEED, SLIDING_IMPULSE } from "shared/constants/Movement";
 import { MovementStateType } from "shared/types/Movement";
 import MovementState from "./MovementState";
 
@@ -15,11 +8,13 @@ class CrouchedState extends MovementState {
 	enter(prevStateType: MovementStateType) {
 		if (!this.context.groundSensor.SensedPart) return MovementStateType.CrouchFall;
 
-		if (this.context.rootPart.AssemblyLinearVelocity.Magnitude >= RUNNING_SPEED - SPEED_TRANSITION_BUFFER) {
+		if (this.context.isAtSpeed(RUNNING_SPEED)) {
 			this.applySlidingImpulse(this.context.rootPart);
 			return MovementStateType.Sliding;
 		}
-		if (this.isOnSteepSlope()) return MovementStateType.Sliding;
+		if (this.context.isOnSteepSlope()) return MovementStateType.Sliding;
+
+		if (!this.context.getToCrouch()) return MovementStateType.Walking;
 
 		this.context.humanoid.ChangeState(Enum.HumanoidStateType.Running);
 		this.context.controllerManager.BaseMoveSpeed = CROUCHED_SPEED;
@@ -34,7 +29,7 @@ class CrouchedState extends MovementState {
 
 		if (this.context.performGroundCheck()) {
 			if (!this.context.getToCrouch()) return MovementStateType.Walking;
-			if (this.isOnSteepSlope()) return MovementStateType.Sliding;
+			if (this.context.isOnSteepSlope()) return MovementStateType.Sliding;
 			return undefined;
 		}
 		return MovementStateType.CrouchFall;
@@ -53,10 +48,6 @@ class CrouchedState extends MovementState {
 		const forward = this.context.character.GetPivot().LookVector;
 		const slideDir = forward.sub(normal.mul(forward.Dot(normal)));
 		rootPart.ApplyImpulse(slideDir.mul(SLIDING_IMPULSE * this.context.mass));
-	}
-
-	private isOnSteepSlope() {
-		return this.context.groundSensor.HitNormal.Angle(Vector3.yAxis) > math.rad(MAX_SLOPE_ANGLE);
 	}
 }
 

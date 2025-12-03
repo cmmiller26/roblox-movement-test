@@ -37,7 +37,9 @@ class JumpingState extends MovementState {
 		}
 		const jumpDir = normal.Lerp(Vector3.yAxis, jumpUpwardBlend).Unit;
 		const jumpForce = jumpImpulse * this.context.mass;
-		this.context.rootPart.ApplyImpulse(jumpDir.mul(jumpForce));
+
+		// Only apply jump impulse if there's no ceiling immediately above
+		if (!this.context.performCeilingCheck()) this.context.rootPart.ApplyImpulse(jumpDir.mul(jumpForce));
 
 		if (floor) floor.ApplyImpulseAtPosition(jumpDir.mul(-jumpForce), groundSensor.HitFrame.Position);
 		groundSensor.SensedPart = undefined;

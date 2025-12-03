@@ -27,13 +27,24 @@ export interface MovementStateContext {
 
 	lastJumpTick: number;
 
+	applyAirControlImpulse(direction: Vector3): void;
+
 	performGroundCheck(): RaycastResult | undefined;
-	performCeilingCheck(offset: number): RaycastResult | undefined;
+	performCeilingCheck(distance?: number): RaycastResult | undefined;
 	performWallCheck(direction: WallDirection): RaycastResult | undefined;
 
 	configCollisionPartForState(stateType?: MovementStateType, isCrouchFallLand?: boolean): void;
-
 	tiltCameraForWallRun(direction?: WallDirection): void;
+
+	isAtSpeed(speed: number): boolean;
+	isBelowSpeed(speed: number): boolean;
+
+	hasCompletedJump(): boolean;
+	isOnSteepSlope(): boolean;
+
+	getWallSide(normal: Vector3): WallDirection;
+
+	getHorizontalVelocity(): Vector3;
 
 	getMovementStateType(): MovementStateType;
 

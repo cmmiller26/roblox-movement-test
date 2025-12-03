@@ -8,6 +8,7 @@ class FreefallState extends MovementState {
 	enter() {
 		this.context.humanoid.ChangeState(Enum.HumanoidStateType.Freefall);
 		this.context.controllerManager.ActiveController = this.context.airController;
+		this.context.controllerManager.MovingDirection = Vector3.zero;
 
 		this.context.groundSensor.SensedPart = undefined;
 
@@ -16,7 +17,7 @@ class FreefallState extends MovementState {
 
 	update() {
 		const moveDirection = this.context.humanoid.MoveDirection;
-		this.context.controllerManager.MovingDirection = moveDirection;
+		this.context.applyAirControlImpulse(moveDirection);
 
 		if (this.hasCompletedJump() && this.context.performGroundCheck()) return MovementStateType.Landed;
 

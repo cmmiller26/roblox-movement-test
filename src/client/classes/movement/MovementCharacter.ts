@@ -2,10 +2,16 @@ import Gizmos from "@rbxts/gizmos";
 import { TweenService, Workspace } from "@rbxts/services";
 import {
 	GROUND_SEARCH_DISTANCE,
+	CEILING_SEARCH_DISTANCE,
 	WALL_SEARCH_DISTANCE,
 	COLLISION_PART_SIZE,
 	CROUCH_OFFSET,
 	SLIDING_OFFSET,
+	SPEED_TRANSITION_BUFFER,
+	AIR_CONTROL_IMPULSE,
+	MAX_AIR_CONTROL_SPEED,
+	MIN_JUMP_TIME,
+	MAX_SLOPE_ANGLE,
 	WALL_RUN_GROUND_OFFSET,
 	COLLISION_PART_TWEEN_TIME,
 	CAMERA_OFFSET_TWEEN_TIME,
@@ -98,7 +104,7 @@ class MovementCharacter implements MovementStateContext {
 		this.controllerManager.FacingDirection = facingDirection;
 		this.stateMachine.update(dt);
 
-		Gizmos.log(tostring(math.round(this.rootPart.AssemblyLinearVelocity.Magnitude * 100) / 100) + " studs/s");
+		Gizmos.log(tostring(math.round(this.getHorizontalVelocity().Magnitude * 100) / 100) + " studs/s");
 	}
 
 	handleJumpRequest(): void {
@@ -114,7 +120,22 @@ class MovementCharacter implements MovementStateContext {
 		if (toCrouch) this.stateMachine.changeState(MovementStateType.Crouched);
 	}
 
-	performGroundCheck(): RaycastResult | undefined {
+	applyAirControlImpulse(moveDirection: Vector3) {
+		if (moveDirection === Vector3.zero) return;
+
+		let impulseDirection = moveDirection;
+		const velocity = this.getHorizontalVelocity();
+		if (velocity.Magnitude > 0) {
+			const dot = moveDirection.Dot(velocity.Unit);
+			if (dot > 0 && velocity.Magnitude >= MAX_AIR_CONTROL_SPEED)
+				impulseDirection = moveDirection.sub(velocity.Unit.mul(dot));
+		}
+
+		if (impulseDirection.Magnitude > 0)
+			this.rootPart.ApplyImpulse(impulseDirection.mul(AIR_CONTROL_IMPULSE * this.mass));
+	}
+
+	performGroundCheck() {
 		const cframe = this.collisionPart.GetPivot();
 		const size = this.collisionPart.Size;
 		const direction = Vector3.yAxis.mul(
@@ -127,15 +148,15 @@ class MovementCharacter implements MovementStateContext {
 			this.groundSensor.SensedPart = raycastResult.Instance;
 		}
 
-		//Gizmos.drawBlockcast(cframe, size, direction, raycastResult);
+		Gizmos.drawBlockcast(cframe, size, direction, raycastResult);
 
 		return raycastResult;
 	}
 
-	performCeilingCheck(offset: number): RaycastResult | undefined {
+	performCeilingCheck(distance = CEILING_SEARCH_DISTANCE) {
 		const cframe = this.collisionPart.GetPivot();
 		const size = this.collisionPart.Size;
-		const direction = Vector3.yAxis.mul(offset);
+		const direction = Vector3.yAxis.mul(distance);
 		const raycastResult = Workspace.Blockcast(cframe, size, direction, this.raycastParams);
 
 		//Gizmos.drawBlockcast(cframe, size, direction, raycastResult);
@@ -143,7 +164,7 @@ class MovementCharacter implements MovementStateContext {
 		return raycastResult;
 	}
 
-	performWallCheck(direction: WallDirection): RaycastResult | undefined {
+	performWallCheck(direction: WallDirection) {
 		const rootCFrame = this.character.GetPivot();
 
 		const origin = rootCFrame.Position;
@@ -165,14 +186,14 @@ class MovementCharacter implements MovementStateContext {
 		return undefined;
 	}
 
-	configCollisionPartForState(stateType?: MovementStateType, isCrouchFallLand = false): void {
+	configCollisionPartForState(stateType?: MovementStateType, isCrouchFallLand = false) {
 		switch (stateType) {
 			case MovementStateType.Crouched: {
 				this.collisionPart.Size = COLLISION_PART_SIZE.sub(new Vector3(0, CROUCH_OFFSET, 0));
 
 				const c1 = new CFrame(0, -(CROUCH_OFFSET / 2), 0);
 				if (isCrouchFallLand) {
-					this.tweenCollisionPartWeld(c1);
+					this.tweenCollisionPartC1(c1);
 				} else {
 					this.collisionPart.Weld.C1 = c1;
 				}
@@ -194,7 +215,7 @@ class MovementCharacter implements MovementStateContext {
 
 				const c1 = new CFrame(0, -(SLIDING_OFFSET / 2), 0);
 				if (isCrouchFallLand) {
-					this.tweenCollisionPartWeld(c1);
+					this.tweenCollisionPartC1(c1);
 				} else {
 					this.collisionPart.Weld.C1 = c1;
 				}
@@ -204,26 +225,26 @@ class MovementCharacter implements MovementStateContext {
 				break;
 			}
 			default: {
-				// Always tween when increasing size to prevent clipping
+				// Always tween when increasing collision part size to prevent clipping
 				TweenService.Create(this.collisionPart, new TweenInfo(COLLISION_PART_TWEEN_TIME), {
 					Size: COLLISION_PART_SIZE,
 				}).Play();
 
 				const c1 = new CFrame();
 				if (isCrouchFallLand) {
-					this.tweenCollisionPartWeld(c1, true);
+					this.tweenCollisionPartC1(c1);
 				} else {
 					this.collisionPart.Weld.C1 = c1;
 				}
 
-				this.tweenCameraOffset(new Vector3());
+				this.tweenCameraOffset(Vector3.zero);
 
 				break;
 			}
 		}
 	}
 
-	tiltCameraForWallRun(direction?: WallDirection): void {
+	tiltCameraForWallRun(direction?: WallDirection) {
 		let tiltAngle = 0;
 		if (direction === WallDirection.Left) {
 			tiltAngle = -WALL_RUN_CAMERA_TILT_ANGLE;
@@ -235,15 +256,40 @@ class MovementCharacter implements MovementStateContext {
 		}).Play();
 	}
 
-	getMovementStateType(): MovementStateType {
+	isAtSpeed(speed: number) {
+		return this.getHorizontalVelocity().Magnitude >= speed - SPEED_TRANSITION_BUFFER;
+	}
+
+	isBelowSpeed(speed: number) {
+		return this.getHorizontalVelocity().Magnitude < speed - SPEED_TRANSITION_BUFFER;
+	}
+
+	hasCompletedJump() {
+		return os.clock() - this.lastJumpTick >= MIN_JUMP_TIME;
+	}
+
+	isOnSteepSlope() {
+		return this.groundSensor.HitNormal.Angle(Vector3.yAxis) > math.rad(MAX_SLOPE_ANGLE);
+	}
+
+	getWallSide(normal: Vector3) {
+		return normal.Dot(this.character.GetPivot().RightVector) > 0 ? WallDirection.Left : WallDirection.Right;
+	}
+
+	getHorizontalVelocity(): Vector3 {
+		const velocity = this.rootPart.AssemblyLinearVelocity;
+		return new Vector3(velocity.X, 0, velocity.Z);
+	}
+
+	getMovementStateType() {
 		return this.stateMachine.getMovementStateType();
 	}
 
-	getToSprint(): boolean {
+	getToSprint() {
 		return this.toSprint;
 	}
 
-	getToCrouch(): boolean {
+	getToCrouch() {
 		return this.toCrouch;
 	}
 
@@ -251,11 +297,7 @@ class MovementCharacter implements MovementStateContext {
 		this.stateMachine.destroy();
 	}
 
-	// Tween the collision part weld when transitioning from CrouchFall state
-	private tweenCollisionPartWeld(c1: CFrame, offset = false): void {
-		// When transitioning to default state (bigger collision part size), we need to offset the weld to prevent clipping
-		if (offset) this.collisionPart.Weld.C1 = new CFrame(0, CROUCH_OFFSET, 0);
-
+	private tweenCollisionPartC1(c1: CFrame): void {
 		TweenService.Create(this.collisionPart.Weld, new TweenInfo(COLLISION_PART_TWEEN_TIME), {
 			C1: c1,
 		}).Play();

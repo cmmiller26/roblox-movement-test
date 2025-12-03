@@ -1,4 +1,4 @@
-import { WALKING_SPEED, SPEED_TRANSITION_BUFFER } from "shared/constants/Movement";
+import { WALKING_SPEED } from "shared/constants/Movement";
 import { MovementStateType } from "shared/types/Movement";
 import MovementState from "./MovementState";
 
@@ -26,9 +26,7 @@ class WalkingState extends MovementState {
 	}
 
 	private checkSprintCondition(): boolean {
-		const isAtWalkSpeed =
-			this.context.rootPart.AssemblyLinearVelocity.Magnitude >= WALKING_SPEED - SPEED_TRANSITION_BUFFER;
-		return this.context.getToSprint() && isAtWalkSpeed;
+		return this.context.getToSprint() && this.context.isAtSpeed(WALKING_SPEED);
 	}
 }
 
