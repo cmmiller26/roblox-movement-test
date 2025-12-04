@@ -1,4 +1,4 @@
-import { RUNNING_SPEED } from "shared/constants/Movement";
+import { Speeds } from "shared/constants/Movement";
 import { MovementStateType } from "shared/types/Movement";
 import MovementState from "./MovementState";
 
@@ -8,7 +8,7 @@ class RunningState extends MovementState {
 	enter() {
 		this.context.humanoid.ChangeState(Enum.HumanoidStateType.Running);
 
-		this.context.controllerManager.BaseMoveSpeed = RUNNING_SPEED;
+		this.context.controllerManager.BaseMoveSpeed = Speeds.RUNNING;
 
 		return undefined;
 	}

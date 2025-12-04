@@ -1,4 +1,3 @@
-import { MIN_JUMP_TIME } from "shared/constants/Movement";
 import { MovementStateType, WallDirection } from "shared/types/Movement";
 import MovementState from "./MovementState";
 
@@ -19,7 +18,7 @@ class FreefallState extends MovementState {
 		const moveDirection = this.context.humanoid.MoveDirection;
 		this.context.applyAirControlImpulse(moveDirection);
 
-		if (this.hasCompletedJump() && this.context.performGroundCheck()) return MovementStateType.Landed;
+		if (this.context.hasCompletedJump() && this.context.performGroundCheck()) return MovementStateType.Landed;
 
 		const inputVector = this.context.character.GetPivot().VectorToObjectSpace(moveDirection);
 		if (
@@ -34,12 +33,8 @@ class FreefallState extends MovementState {
 	override exit(nextStateType?: MovementStateType) {
 		if (nextStateType === MovementStateType.Crouched) return true;
 		if (nextStateType === MovementStateType.WallRunning) return true;
-		if (!this.hasCompletedJump() || !this.context.groundSensor.SensedPart) return false;
+		if (!this.context.hasCompletedJump() || !this.context.groundSensor.SensedPart) return false;
 		return true;
-	}
-
-	private hasCompletedJump(): boolean {
-		return os.clock() - this.context.lastJumpTick >= MIN_JUMP_TIME;
 	}
 }
 

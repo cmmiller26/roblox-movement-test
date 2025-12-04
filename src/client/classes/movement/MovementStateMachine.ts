@@ -9,7 +9,7 @@ import {
 	RunningState,
 	SlidingState,
 	WalkingState,
-	WallRunning,
+	WallRunningState,
 } from "./states";
 
 class MovementStateMachine {
@@ -30,7 +30,7 @@ class MovementStateMachine {
 			[MovementStateType.Running]: new RunningState(context),
 			[MovementStateType.Sliding]: new SlidingState(context),
 			[MovementStateType.Walking]: new WalkingState(context),
-			[MovementStateType.WallRunning]: new WallRunning(context),
+			[MovementStateType.WallRunning]: new WallRunningState(context),
 		};
 
 		this.currentState = this.states[MovementStateType.Freefall];

@@ -1,4 +1,4 @@
-import { DEFAULT_FRICTION } from "shared/constants/Movement";
+import { Physics } from "shared/constants/Movement";
 import { MovementStateType } from "shared/types/Movement";
 import MovementState from "./MovementState";
 
@@ -28,7 +28,7 @@ class LandedState extends MovementState {
 	}
 
 	override exit() {
-		this.context.groundController.Friction = DEFAULT_FRICTION;
+		this.context.groundController.Friction = Physics.DEFAULT_FRICTION;
 		return true;
 	}
 }

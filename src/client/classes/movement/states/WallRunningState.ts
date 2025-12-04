@@ -1,24 +1,24 @@
 import { Workspace } from "@rbxts/services";
-import { WALL_RUN_GROUND_OFFSET, WALL_RUNNING_SPEED, WALL_RUN_DEACCELERATION } from "shared/constants/Movement";
+import { Speeds, WallRunning } from "shared/constants/Movement";
 import { MovementStateType, WallDirection } from "shared/types/Movement";
 import MovementState from "./MovementState";
 
-class WallRunning extends MovementState {
+class WallRunningState extends MovementState {
 	readonly stateType = MovementStateType.WallRunning;
 
 	private wallSide: WallDirection = WallDirection.Left;
 
 	enter() {
-		if (this.context.isBelowSpeed(WALL_RUNNING_SPEED)) return MovementStateType.Freefall;
+		if (this.context.isBelowSpeed(Speeds.WALKING)) return MovementStateType.Freefall;
 
 		this.context.humanoid.ChangeState(Enum.HumanoidStateType.Running);
 		this.context.controllerManager.ActiveController = this.context.groundController;
 		this.context.controllerManager.MovingDirection = Vector3.zero;
 
-		this.context.controllerManager.BaseMoveSpeed = WALL_RUNNING_SPEED;
+		this.context.controllerManager.BaseMoveSpeed = Speeds.WALL_RUNNING;
 		this.context.controllerManager.GroundSensor = this.context.wallSensor;
 
-		this.context.groundController.GroundOffset = WALL_RUN_GROUND_OFFSET;
+		this.context.groundController.GroundOffset = WallRunning.GROUND_OFFSET;
 
 		const normal = this.context.wallSensor.HitNormal;
 		this.wallSide = this.context.getWallSide(normal);
@@ -38,10 +38,10 @@ class WallRunning extends MovementState {
 		const raycastResult = this.context.performWallCheck(this.wallSide);
 		if (raycastResult) {
 			const velocity = this.context.getHorizontalVelocity();
-			if (velocity.Magnitude > WALL_RUNNING_SPEED) {
+			if (velocity.Magnitude > Speeds.WALL_RUNNING) {
 				const friction = raycastResult.Instance.CurrentPhysicalProperties.Friction;
 				this.context.rootPart.ApplyImpulse(
-					velocity.Unit.mul(-friction * WALL_RUN_DEACCELERATION * this.context.mass * dt),
+					velocity.Unit.mul(-friction * WallRunning.DEACCELERATION * this.context.mass * dt),
 				);
 			}
 
@@ -63,4 +63,4 @@ class WallRunning extends MovementState {
 	}
 }
 
-export default WallRunning;
+export default WallRunningState;

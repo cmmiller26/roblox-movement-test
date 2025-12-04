@@ -1,4 +1,4 @@
-import { CROUCH_OFFSET, CROUCHED_SPEED, RUNNING_SPEED, SLIDING_IMPULSE } from "shared/constants/Movement";
+import { Crouching, Sliding, Speeds } from "shared/constants/Movement";
 import { MovementStateType } from "shared/types/Movement";
 import MovementState from "./MovementState";
 
@@ -8,7 +8,7 @@ class CrouchedState extends MovementState {
 	enter(prevStateType: MovementStateType) {
 		if (!this.context.groundSensor.SensedPart) return MovementStateType.CrouchFall;
 
-		if (this.context.isAtSpeed(RUNNING_SPEED)) {
+		if (this.context.isAtSpeed(Speeds.RUNNING)) {
 			this.applySlidingImpulse(this.context.rootPart);
 			return MovementStateType.Sliding;
 		}
@@ -17,7 +17,7 @@ class CrouchedState extends MovementState {
 		if (!this.context.getToCrouch()) return MovementStateType.Walking;
 
 		this.context.humanoid.ChangeState(Enum.HumanoidStateType.Running);
-		this.context.controllerManager.BaseMoveSpeed = CROUCHED_SPEED;
+		this.context.controllerManager.BaseMoveSpeed = Speeds.CROUCHED;
 
 		if (prevStateType !== MovementStateType.Landed) this.context.configCollisionPartForState(this.stateType);
 
@@ -36,7 +36,7 @@ class CrouchedState extends MovementState {
 	}
 
 	override exit() {
-		if (this.context.performCeilingCheck(CROUCH_OFFSET)) return false;
+		if (this.context.performCeilingCheck(Crouching.OFFSET)) return false;
 
 		this.context.configCollisionPartForState();
 
@@ -47,7 +47,7 @@ class CrouchedState extends MovementState {
 		const normal = this.context.groundSensor.HitNormal;
 		const forward = this.context.character.GetPivot().LookVector;
 		const slideDir = forward.sub(normal.mul(forward.Dot(normal)));
-		rootPart.ApplyImpulse(slideDir.mul(SLIDING_IMPULSE * this.context.mass));
+		rootPart.ApplyImpulse(slideDir.mul(Sliding.IMPULSE * this.context.mass));
 	}
 }
 

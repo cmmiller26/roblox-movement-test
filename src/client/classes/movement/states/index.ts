@@ -8,4 +8,4 @@ export { default as LandedState } from "./LandedState";
 export { default as RunningState } from "./RunningState";
 export { default as SlidingState } from "./SlidingState";
 export { default as WalkingState } from "./WalkingState";
-export { default as WallRunning } from "./WallRunning";
+export { default as WallRunningState } from "./WallRunningState";

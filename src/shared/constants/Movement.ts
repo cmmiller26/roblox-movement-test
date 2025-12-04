@@ -1,38 +1,59 @@
 import { StarterPlayer, Workspace } from "@rbxts/services";
 
-export const GROUND_SEARCH_DISTANCE = 0.25;
-export const CEILING_SEARCH_DISTANCE = 1;
-export const WALL_SEARCH_DISTANCE = 0.5;
-export const COLLISION_PART_SIZE = new Vector3(2, 3, 1);
-export const CROUCH_OFFSET = 1.5;
-export const SLIDING_OFFSET = CROUCH_OFFSET + 0.5;
-export const WALL_RUN_GROUND_OFFSET = 1;
+export const Speeds = {
+	WALKING: StarterPlayer.CharacterWalkSpeed,
+	RUNNING: StarterPlayer.CharacterWalkSpeed * 2,
+	CROUCHED: StarterPlayer.CharacterWalkSpeed / 2,
+	WALL_RUNNING: StarterPlayer.CharacterWalkSpeed * 2,
+	TRANSITION_BUFFER: 1,
+};
 
-export const WALKING_SPEED = StarterPlayer.CharacterWalkSpeed;
-export const RUNNING_SPEED = WALKING_SPEED * 2;
-export const CROUCHED_SPEED = WALKING_SPEED / 2;
-export const WALL_RUNNING_SPEED = RUNNING_SPEED;
-export const SPEED_TRANSITION_BUFFER = 1;
-export const AIR_CONTROL_IMPULSE = 1.5;
-export const MAX_AIR_CONTROL_SPEED = WALKING_SPEED;
-export const WALL_RUN_DEACCELERATION = 50;
+export const Physics = {
+	DEFAULT_FRICTION: 2,
+};
 
-export const JUMP_IMPULSE = math.sqrt(2 * Workspace.Gravity * StarterPlayer.CharacterJumpHeight);
-export const SLIDE_JUMP_IMPULSE = JUMP_IMPULSE * 1.5;
-export const WALL_JUMP_IMPULSE = JUMP_IMPULSE * 1.5;
-export const JUMP_UPWARD_BLEND = 0.5;
-export const SLIDE_JUMP_UPWARD_BLEND = 0.5;
-export const WALL_JUMP_UPWARD_BLEND = 0.25;
-export const SLIDING_IMPULSE = 25;
-export const DEFAULT_FRICTION = 2;
-export const SLIDING_FRICTION = DEFAULT_FRICTION / 4;
+export const Detection = {
+	GROUND_SEARCH_DISTANCE: 0.25,
+	CEILING_SEARCH_DISTANCE: 1,
+	WALL_SEARCH_DISTANCE: 0.5,
+	COLLISION_PART_SIZE: new Vector3(2, 3, 1),
+	COLLISION_PART_TWEEN_TIME: 0.2,
+	CAMERA_OFFSET_TWEEN_TIME: 0.1,
+};
 
-export const MIN_JUMP_TIME = 0.1;
-export const MIN_SLIDE_TIME = 0.1;
-export const MAX_SLOPE_ANGLE = 60;
-export const CROUCH_FALL_SETTLE_THRESHOLD = 2;
-export const CROUCH_FALL_MIN_SETTLE_TIME = 0.1;
-export const CROUCH_FALL_MAX_SETTLE_TIME = 0.5;
-export const COLLISION_PART_TWEEN_TIME = 0.2;
-export const CAMERA_OFFSET_TWEEN_TIME = 0.1;
-export const WALL_RUN_CAMERA_TILT_ANGLE = 15;
+export const AirControl = {
+	IMPULSE: 1.5,
+	MAX_SPEED: Speeds.WALKING,
+};
+
+export const Crouching = {
+	OFFSET: 1.5,
+	FALL_SETTLE_THRESHOLD: 2,
+	FALL_MIN_SETTLE_TIME: 0.1,
+	FALL_MAX_SETTLE_TIME: 0.5,
+};
+
+const JUMP_IMPULSE = math.sqrt(2 * Workspace.Gravity * StarterPlayer.CharacterJumpHeight);
+export const Jumping = {
+	IMPULSE: JUMP_IMPULSE,
+	SLIDE_IMPULSE: JUMP_IMPULSE * 1.5,
+	WALL_IMPULSE: JUMP_IMPULSE * 1.5,
+	UPWARD_BLEND: 0.5,
+	SLIDE_UPWARD_BLEND: 0.5,
+	WALL_UPWARD_BLEND: 0.25,
+	MIN_TIME: 0.1,
+};
+
+export const Sliding = {
+	OFFSET: Crouching.OFFSET + 0.5,
+	IMPULSE: 25,
+	FRICTION: Physics.DEFAULT_FRICTION / 4,
+	MIN_TIME: 0.1,
+	MAX_SLOPE_ANGLE: 60,
+};
+
+export const WallRunning = {
+	GROUND_OFFSET: 1,
+	DEACCELERATION: 50,
+	CAMERA_TILT_ANGLE: 15,
+};

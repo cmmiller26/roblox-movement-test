@@ -1,22 +1,6 @@
 import Gizmos from "@rbxts/gizmos";
 import { TweenService, Workspace } from "@rbxts/services";
-import {
-	GROUND_SEARCH_DISTANCE,
-	CEILING_SEARCH_DISTANCE,
-	WALL_SEARCH_DISTANCE,
-	COLLISION_PART_SIZE,
-	CROUCH_OFFSET,
-	SLIDING_OFFSET,
-	SPEED_TRANSITION_BUFFER,
-	AIR_CONTROL_IMPULSE,
-	MAX_AIR_CONTROL_SPEED,
-	MIN_JUMP_TIME,
-	MAX_SLOPE_ANGLE,
-	WALL_RUN_GROUND_OFFSET,
-	COLLISION_PART_TWEEN_TIME,
-	CAMERA_OFFSET_TWEEN_TIME,
-	WALL_RUN_CAMERA_TILT_ANGLE,
-} from "shared/constants/Movement";
+import { AirControl, Crouching, Detection, Jumping, Sliding, Speeds, WallRunning } from "shared/constants/Movement";
 import { MovementStateContext, MovementStateType, CollisionPart, WallDirection } from "shared/types/Movement";
 import MovementStateMachine from "./MovementStateMachine";
 
@@ -127,19 +111,19 @@ class MovementCharacter implements MovementStateContext {
 		const velocity = this.getHorizontalVelocity();
 		if (velocity.Magnitude > 0) {
 			const dot = moveDirection.Dot(velocity.Unit);
-			if (dot > 0 && velocity.Magnitude >= MAX_AIR_CONTROL_SPEED)
+			if (dot > 0 && velocity.Magnitude >= AirControl.MAX_SPEED)
 				impulseDirection = moveDirection.sub(velocity.Unit.mul(dot));
 		}
 
 		if (impulseDirection.Magnitude > 0)
-			this.rootPart.ApplyImpulse(impulseDirection.mul(AIR_CONTROL_IMPULSE * this.mass));
+			this.rootPart.ApplyImpulse(impulseDirection.mul(AirControl.IMPULSE * this.mass));
 	}
 
 	performGroundCheck() {
 		const cframe = this.collisionPart.GetPivot();
 		const size = this.collisionPart.Size;
 		const direction = Vector3.yAxis.mul(
-			-(this.humanoid.HipHeight - this.collisionPart.Weld.C0.Y + GROUND_SEARCH_DISTANCE),
+			-(this.humanoid.HipHeight - this.collisionPart.Weld.C0.Y + Detection.GROUND_SEARCH_DISTANCE),
 		);
 		const raycastResult = Workspace.Blockcast(cframe, size, direction, this.raycastParams);
 		if (raycastResult) {
@@ -153,7 +137,7 @@ class MovementCharacter implements MovementStateContext {
 		return raycastResult;
 	}
 
-	performCeilingCheck(distance = CEILING_SEARCH_DISTANCE) {
+	performCeilingCheck(distance = Detection.CEILING_SEARCH_DISTANCE) {
 		const cframe = this.collisionPart.GetPivot();
 		const size = this.collisionPart.Size;
 		const direction = Vector3.yAxis.mul(distance);
@@ -169,7 +153,7 @@ class MovementCharacter implements MovementStateContext {
 
 		const origin = rootCFrame.Position;
 		const rayDir = rootCFrame.RightVector.mul(direction === WallDirection.Left ? -1 : 1).mul(
-			WALL_RUN_GROUND_OFFSET + WALL_SEARCH_DISTANCE,
+			WallRunning.GROUND_OFFSET + Detection.WALL_SEARCH_DISTANCE,
 		);
 		const raycastResult = Workspace.Raycast(origin, rayDir, this.raycastParams);
 
@@ -189,45 +173,45 @@ class MovementCharacter implements MovementStateContext {
 	configCollisionPartForState(stateType?: MovementStateType, isCrouchFallLand = false) {
 		switch (stateType) {
 			case MovementStateType.Crouched: {
-				this.collisionPart.Size = COLLISION_PART_SIZE.sub(new Vector3(0, CROUCH_OFFSET, 0));
+				this.collisionPart.Size = Detection.COLLISION_PART_SIZE.sub(new Vector3(0, Crouching.OFFSET, 0));
 
-				const c1 = new CFrame(0, -(CROUCH_OFFSET / 2), 0);
+				const c1 = new CFrame(0, -(Crouching.OFFSET / 2), 0);
 				if (isCrouchFallLand) {
 					this.tweenCollisionPartC1(c1);
 				} else {
 					this.collisionPart.Weld.C1 = c1;
 				}
 
-				this.tweenCameraOffset(new Vector3(0, -CROUCH_OFFSET, 0));
+				this.tweenCameraOffset(new Vector3(0, -Crouching.OFFSET, 0));
 
 				break;
 			}
 			case MovementStateType.CrouchFall: {
-				this.collisionPart.Size = COLLISION_PART_SIZE.sub(new Vector3(0, CROUCH_OFFSET, 0));
-				this.collisionPart.Weld.C1 = new CFrame(0, CROUCH_OFFSET / 2, 0);
+				this.collisionPart.Size = Detection.COLLISION_PART_SIZE.sub(new Vector3(0, Crouching.OFFSET, 0));
+				this.collisionPart.Weld.C1 = new CFrame(0, Crouching.OFFSET / 2, 0);
 
-				this.tweenCameraOffset(new Vector3(0, CROUCH_OFFSET, 0));
+				this.tweenCameraOffset(new Vector3(0, Crouching.OFFSET, 0));
 
 				break;
 			}
 			case MovementStateType.Sliding: {
-				this.collisionPart.Size = COLLISION_PART_SIZE.sub(new Vector3(0, SLIDING_OFFSET, 0));
+				this.collisionPart.Size = Detection.COLLISION_PART_SIZE.sub(new Vector3(0, Sliding.OFFSET, 0));
 
-				const c1 = new CFrame(0, -(SLIDING_OFFSET / 2), 0);
+				const c1 = new CFrame(0, -(Sliding.OFFSET / 2), 0);
 				if (isCrouchFallLand) {
 					this.tweenCollisionPartC1(c1);
 				} else {
 					this.collisionPart.Weld.C1 = c1;
 				}
 
-				this.tweenCameraOffset(new Vector3(0, -SLIDING_OFFSET, 0));
+				this.tweenCameraOffset(new Vector3(0, -Sliding.OFFSET, 0));
 
 				break;
 			}
 			default: {
 				// Always tween when increasing collision part size to prevent clipping
-				TweenService.Create(this.collisionPart, new TweenInfo(COLLISION_PART_TWEEN_TIME), {
-					Size: COLLISION_PART_SIZE,
+				TweenService.Create(this.collisionPart, new TweenInfo(Detection.COLLISION_PART_TWEEN_TIME), {
+					Size: Detection.COLLISION_PART_SIZE,
 				}).Play();
 
 				const c1 = new CFrame();
@@ -247,29 +231,29 @@ class MovementCharacter implements MovementStateContext {
 	tiltCameraForWallRun(direction?: WallDirection) {
 		let tiltAngle = 0;
 		if (direction === WallDirection.Left) {
-			tiltAngle = -WALL_RUN_CAMERA_TILT_ANGLE;
+			tiltAngle = -WallRunning.CAMERA_TILT_ANGLE;
 		} else if (direction === WallDirection.Right) {
-			tiltAngle = WALL_RUN_CAMERA_TILT_ANGLE;
+			tiltAngle = WallRunning.CAMERA_TILT_ANGLE;
 		}
-		TweenService.Create(this.cameraTiltZ, new TweenInfo(CAMERA_OFFSET_TWEEN_TIME), {
+		TweenService.Create(this.cameraTiltZ, new TweenInfo(Detection.CAMERA_OFFSET_TWEEN_TIME), {
 			Value: tiltAngle,
 		}).Play();
 	}
 
 	isAtSpeed(speed: number) {
-		return this.getHorizontalVelocity().Magnitude >= speed - SPEED_TRANSITION_BUFFER;
+		return this.getHorizontalVelocity().Magnitude >= speed - Speeds.TRANSITION_BUFFER;
 	}
 
 	isBelowSpeed(speed: number) {
-		return this.getHorizontalVelocity().Magnitude < speed - SPEED_TRANSITION_BUFFER;
+		return this.getHorizontalVelocity().Magnitude < speed - Speeds.TRANSITION_BUFFER;
 	}
 
 	hasCompletedJump() {
-		return os.clock() - this.lastJumpTick >= MIN_JUMP_TIME;
+		return os.clock() - this.lastJumpTick >= Jumping.MIN_TIME;
 	}
 
 	isOnSteepSlope() {
-		return this.groundSensor.HitNormal.Angle(Vector3.yAxis) > math.rad(MAX_SLOPE_ANGLE);
+		return this.groundSensor.HitNormal.Angle(Vector3.yAxis) > math.rad(Sliding.MAX_SLOPE_ANGLE);
 	}
 
 	getWallSide(normal: Vector3) {
@@ -298,13 +282,13 @@ class MovementCharacter implements MovementStateContext {
 	}
 
 	private tweenCollisionPartC1(c1: CFrame): void {
-		TweenService.Create(this.collisionPart.Weld, new TweenInfo(COLLISION_PART_TWEEN_TIME), {
+		TweenService.Create(this.collisionPart.Weld, new TweenInfo(Detection.COLLISION_PART_TWEEN_TIME), {
 			C1: c1,
 		}).Play();
 	}
 
 	private tweenCameraOffset(offset: Vector3): void {
-		TweenService.Create(this.humanoid, new TweenInfo(CAMERA_OFFSET_TWEEN_TIME), {
+		TweenService.Create(this.humanoid, new TweenInfo(Detection.CAMERA_OFFSET_TWEEN_TIME), {
 			CameraOffset: offset,
 		}).Play();
 	}

@@ -1,10 +1,4 @@
-import {
-	SLIDING_OFFSET,
-	CROUCHED_SPEED,
-	DEFAULT_FRICTION,
-	SLIDING_FRICTION,
-	MIN_SLIDE_TIME,
-} from "shared/constants/Movement";
+import { Physics, Sliding, Speeds } from "shared/constants/Movement";
 import { MovementStateType } from "shared/types/Movement";
 import MovementState from "./MovementState";
 
@@ -17,7 +11,7 @@ class SlidingState extends MovementState {
 		this.context.humanoid.ChangeState(Enum.HumanoidStateType.Running);
 
 		this.context.controllerManager.MovingDirection = Vector3.zero;
-		this.context.groundController.Friction = SLIDING_FRICTION;
+		this.context.groundController.Friction = Sliding.FRICTION;
 
 		if (prevStateType !== MovementStateType.Landed) this.context.configCollisionPartForState(this.stateType);
 
@@ -28,7 +22,7 @@ class SlidingState extends MovementState {
 
 	override update(dt: number) {
 		if (this.context.performGroundCheck()) {
-			if (!this.context.isOnSteepSlope() && this.context.isBelowSpeed(CROUCHED_SPEED))
+			if (!this.context.isOnSteepSlope() && this.context.isBelowSpeed(Speeds.CROUCHED))
 				return MovementStateType.Crouched;
 			return undefined;
 		}
@@ -36,12 +30,11 @@ class SlidingState extends MovementState {
 	}
 
 	override exit(nextStateType?: MovementStateType) {
-		if (os.clock() - this.lastSlideTick < MIN_SLIDE_TIME) return false;
-		if (nextStateType !== MovementStateType.Crouched && this.context.performCeilingCheck(SLIDING_OFFSET))
+		if (os.clock() - this.lastSlideTick < Sliding.MIN_TIME) return false;
+		if (nextStateType !== MovementStateType.Crouched && this.context.performCeilingCheck(Sliding.OFFSET))
 			return false;
 
-		this.context.groundController.Friction = DEFAULT_FRICTION;
-
+		this.context.groundController.Friction = Physics.DEFAULT_FRICTION;
 		this.context.configCollisionPartForState();
 
 		return true;

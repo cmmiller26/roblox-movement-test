@@ -1,4 +1,4 @@
-import { WALKING_SPEED } from "shared/constants/Movement";
+import { Speeds } from "shared/constants/Movement";
 import { MovementStateType } from "shared/types/Movement";
 import MovementState from "./MovementState";
 
@@ -10,7 +10,7 @@ class WalkingState extends MovementState {
 
 		this.context.humanoid.ChangeState(Enum.HumanoidStateType.Running);
 
-		this.context.controllerManager.BaseMoveSpeed = WALKING_SPEED;
+		this.context.controllerManager.BaseMoveSpeed = Speeds.WALKING;
 
 		return undefined;
 	}
@@ -26,7 +26,7 @@ class WalkingState extends MovementState {
 	}
 
 	private checkSprintCondition(): boolean {
-		return this.context.getToSprint() && this.context.isAtSpeed(WALKING_SPEED);
+		return this.context.getToSprint() && this.context.isAtSpeed(Speeds.WALKING);
 	}
 }
 

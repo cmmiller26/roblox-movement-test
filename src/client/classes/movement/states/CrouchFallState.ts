@@ -1,10 +1,5 @@
 import { RunService } from "@rbxts/services";
-import {
-	CROUCH_OFFSET,
-	CROUCH_FALL_SETTLE_THRESHOLD,
-	CROUCH_FALL_MIN_SETTLE_TIME,
-	CROUCH_FALL_MAX_SETTLE_TIME,
-} from "shared/constants/Movement";
+import { Crouching } from "shared/constants/Movement";
 import { MovementStateType } from "shared/types/Movement";
 import MovementState from "./MovementState";
 
@@ -17,7 +12,7 @@ class CrouchFallState extends MovementState {
 		this.context.controllerManager.MovingDirection = Vector3.zero;
 
 		this.context.groundSensor.SensedPart = undefined;
-		this.context.groundController.GroundOffset = this.context.humanoid.HipHeight - CROUCH_OFFSET;
+		this.context.groundController.GroundOffset = this.context.humanoid.HipHeight - Crouching.OFFSET;
 
 		this.context.configCollisionPartForState(this.stateType);
 
@@ -59,9 +54,9 @@ class CrouchFallState extends MovementState {
 
 			// Only reset if minimum time has passed AND (velocity is settled OR max time reached)
 			// MIN_SETTLE_TIME ensures the GroundController has time to move the collision part upward after landing, even if velocity is already zero
-			const minTimeReached = elapsed >= CROUCH_FALL_MIN_SETTLE_TIME;
-			const velocitySettled = math.abs(velocityY) <= CROUCH_FALL_SETTLE_THRESHOLD;
-			const maxTimeReached = elapsed >= CROUCH_FALL_MAX_SETTLE_TIME;
+			const minTimeReached = elapsed >= Crouching.FALL_MIN_SETTLE_TIME;
+			const velocitySettled = math.abs(velocityY) <= Crouching.FALL_SETTLE_THRESHOLD;
+			const maxTimeReached = elapsed >= Crouching.FALL_MAX_SETTLE_TIME;
 			if (minTimeReached && (velocitySettled || maxTimeReached)) {
 				this.resetCrouchProperties(true);
 				connection.Disconnect();
