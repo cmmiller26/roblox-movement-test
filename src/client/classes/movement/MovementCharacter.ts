@@ -80,14 +80,13 @@ class MovementCharacter implements MovementStateContext {
 
 		this.raycastParams.FilterDescendantsInstances = [this.character];
 		this.raycastParams.FilterType = Enum.RaycastFilterType.Exclude;
-
-		print("MovementCharacter initialized");
 	}
 
 	update(dt: number, facingDirection: Vector3): void {
 		this.controllerManager.FacingDirection = facingDirection;
 		this.stateMachine.update(dt);
 
+		this.collisionPart.Transparency = Gizmos.enabled ? 0.5 : 1;
 		Gizmos.log(tostring(math.round(this.getHorizontalVelocity().Magnitude * 100) / 100) + " studs/s");
 	}
 
@@ -143,7 +142,7 @@ class MovementCharacter implements MovementStateContext {
 		const direction = Vector3.yAxis.mul(distance);
 		const raycastResult = Workspace.Blockcast(cframe, size, direction, this.raycastParams);
 
-		//Gizmos.drawBlockcast(cframe, size, direction, raycastResult);
+		Gizmos.drawBlockcast(cframe, size, direction, raycastResult);
 
 		return raycastResult;
 	}
@@ -165,7 +164,7 @@ class MovementCharacter implements MovementStateContext {
 			return raycastResult;
 		}
 
-		//Gizmos.drawRaycast(origin, rayDir, raycastResult);
+		Gizmos.drawRaycast(origin, rayDir, raycastResult);
 
 		return undefined;
 	}

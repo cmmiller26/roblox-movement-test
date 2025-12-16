@@ -20,8 +20,7 @@ class LandedState extends MovementState {
 
 	update() {
 		if (this.context.performGroundCheck()) {
-			if (this.prevStateType === MovementStateType.CrouchFall && this.context.getToCrouch())
-				return MovementStateType.Crouched;
+			if (this.prevStateType === MovementStateType.CrouchFall) return MovementStateType.Crouched;
 			return MovementStateType.Walking;
 		}
 		return MovementStateType.Freefall;

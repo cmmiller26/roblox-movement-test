@@ -8,7 +8,9 @@ class CharacterController implements OnStart, OnPhysics, OnRender {
 	private readonly player = Players.LocalPlayer;
 	private movementCharacter: MovementCharacter | undefined;
 
-	constructor(private cameraController: CameraController) {}
+	constructor(private cameraController: CameraController) {
+		print("CharacterController initialized");
+	}
 
 	onStart(): void {
 		this.player.CharacterAdded.Connect((character) => this.onCharacterAdded(character));
@@ -51,6 +53,7 @@ class CharacterController implements OnStart, OnPhysics, OnRender {
 
 	private onCharacterAdded(character: Model): void {
 		this.movementCharacter = MovementCharacter.fromModel(character);
+		print("MovementCharacter created");
 	}
 
 	private onCharacterRemoving(): void {
