@@ -13,7 +13,7 @@ class RunningState extends MovementState {
 		return undefined;
 	}
 
-	update(dt: number) {
+	update() {
 		this.context.controllerManager.MovingDirection = this.context.humanoid.MoveDirection;
 
 		if (this.context.performGroundCheck()) {

@@ -16,6 +16,9 @@ class MovementCharacter implements MovementStateContext {
 	private toSprint = false;
 	private toCrouch = false;
 
+	private collisionPartC1Tween?: Tween;
+	private collisionPartSizeTween?: Tween;
+
 	static fromModel(character: Model): MovementCharacter | undefined {
 		const rootPart = character.WaitForChild("HumanoidRootPart") as BasePart;
 		const collisionPart = character.WaitForChild("CollisionPart") as CollisionPart;
@@ -131,7 +134,7 @@ class MovementCharacter implements MovementStateContext {
 			this.groundSensor.SensedPart = raycastResult.Instance;
 		}
 
-		Gizmos.drawBlockcast(cframe, size, direction, raycastResult);
+		//Gizmos.drawBlockcast(cframe, size, direction, raycastResult);
 
 		return raycastResult;
 	}
@@ -170,6 +173,15 @@ class MovementCharacter implements MovementStateContext {
 	}
 
 	configCollisionPartForState(stateType?: MovementStateType, isCrouchFallLand = false) {
+		if (this.collisionPartC1Tween) {
+			this.collisionPartC1Tween.Cancel();
+			this.collisionPartC1Tween = undefined;
+		}
+		if (this.collisionPartSizeTween) {
+			this.collisionPartSizeTween.Cancel();
+			this.collisionPartSizeTween = undefined;
+		}
+
 		switch (stateType) {
 			case MovementStateType.Crouched: {
 				this.collisionPart.Size = Detection.COLLISION_PART_SIZE.sub(new Vector3(0, Crouching.OFFSET, 0));
@@ -209,9 +221,14 @@ class MovementCharacter implements MovementStateContext {
 			}
 			default: {
 				// Always tween when increasing collision part size to prevent clipping
-				TweenService.Create(this.collisionPart, new TweenInfo(Detection.COLLISION_PART_TWEEN_TIME), {
-					Size: Detection.COLLISION_PART_SIZE,
-				}).Play();
+				this.collisionPartSizeTween = TweenService.Create(
+					this.collisionPart,
+					new TweenInfo(Detection.COLLISION_PART_TWEEN_TIME),
+					{
+						Size: Detection.COLLISION_PART_SIZE,
+					},
+				);
+				this.collisionPartSizeTween.Play();
 
 				const c1 = new CFrame();
 				if (isCrouchFallLand) {
@@ -281,9 +298,14 @@ class MovementCharacter implements MovementStateContext {
 	}
 
 	private tweenCollisionPartC1(c1: CFrame): void {
-		TweenService.Create(this.collisionPart.Weld, new TweenInfo(Detection.COLLISION_PART_TWEEN_TIME), {
-			C1: c1,
-		}).Play();
+		this.collisionPartC1Tween = TweenService.Create(
+			this.collisionPart.Weld,
+			new TweenInfo(Detection.COLLISION_PART_TWEEN_TIME),
+			{
+				C1: c1,
+			},
+		);
+		this.collisionPartC1Tween.Play();
 	}
 
 	private tweenCameraOffset(offset: Vector3): void {

@@ -29,10 +29,8 @@ class SlidingState extends MovementState {
 		return MovementStateType.Freefall;
 	}
 
-	override exit(nextStateType?: MovementStateType) {
+	override exit() {
 		if (os.clock() - this.lastSlideTick < Sliding.MIN_TIME) return false;
-		if (nextStateType !== MovementStateType.Crouched && this.context.performCeilingCheck(Sliding.OFFSET))
-			return false;
 
 		this.context.groundController.Friction = Physics.DEFAULT_FRICTION;
 		this.context.configCollisionPartForState();

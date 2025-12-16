@@ -14,8 +14,6 @@ class CrouchedState extends MovementState {
 		}
 		if (this.context.isOnSteepSlope()) return MovementStateType.Sliding;
 
-		if (!this.context.getToCrouch()) return MovementStateType.Walking;
-
 		this.context.humanoid.ChangeState(Enum.HumanoidStateType.Running);
 		this.context.controllerManager.BaseMoveSpeed = Speeds.CROUCHED;
 

@@ -15,7 +15,7 @@ class WalkingState extends MovementState {
 		return undefined;
 	}
 
-	override update(dt: number) {
+	override update() {
 		this.context.controllerManager.MovingDirection = this.context.humanoid.MoveDirection;
 
 		if (this.context.performGroundCheck()) {
