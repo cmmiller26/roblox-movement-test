@@ -49,7 +49,7 @@ export const Sliding = {
 	IMPULSE: 25,
 	FRICTION: Physics.DEFAULT_FRICTION / 4,
 	MIN_TIME: 0.1,
-	MAX_SLOPE_ANGLE: 60,
+	MAX_SLOPE_ANGLE: 30,
 };
 
 export const WallRunning = {

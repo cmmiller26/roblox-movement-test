@@ -26,7 +26,7 @@ class SlidingState extends MovementState {
 				return MovementStateType.Crouched;
 			return undefined;
 		}
-		return MovementStateType.Freefall;
+		return MovementStateType.CrouchFall;
 	}
 
 	override exit() {

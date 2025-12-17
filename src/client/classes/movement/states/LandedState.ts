@@ -8,6 +8,13 @@ class LandedState extends MovementState {
 	private prevStateType?: MovementStateType;
 
 	enter(prevStateType?: MovementStateType) {
+		if (this.context.groundSensor.SensedPart?.HasTag("Trampoline")) {
+			const velocity = this.context.rootPart.AssemblyLinearVelocity;
+			this.context.rootPart.AssemblyLinearVelocity = new Vector3(velocity.X, -velocity.Y, velocity.Z);
+
+			return MovementStateType.Jumping;
+		}
+
 		this.context.humanoid.ChangeState(Enum.HumanoidStateType.Landed);
 		this.context.controllerManager.ActiveController = this.context.groundController;
 

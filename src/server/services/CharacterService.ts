@@ -1,5 +1,6 @@
 import { OnStart, Service } from "@flamework/core";
 import { Players } from "@rbxts/services";
+import { Events } from "server/network";
 
 @Service()
 class CharacterService implements OnStart {
@@ -7,15 +8,8 @@ class CharacterService implements OnStart {
 		Players.PlayerAdded.Connect((player) =>
 			player.CharacterAdded.Connect((character) => this.onCharacterAdded(character)),
 		);
-	}
 
-	private onCharacterAdded(character: Model): void {
-		const rootPart = character.WaitForChild("HumanoidRootPart") as BasePart;
-
-		const humanoid = character.WaitForChild("Humanoid") as Humanoid;
-		humanoid.EvaluateStateMachine = false;
-
-		this.setupControllerManager(character, rootPart, humanoid);
+		Events.MovementCharacterDied.connect((player) => this.onMovementCharacterDied(player));
 	}
 
 	private setupControllerManager(character: Model, rootPart: BasePart, humanoid: Humanoid): void {
@@ -64,6 +58,25 @@ class CharacterService implements OnStart {
 		wallSensor.UpdateType = Enum.SensorUpdateType.Manual;
 		wallSensor.Parent = parent;
 		return wallSensor;
+	}
+
+	private onCharacterAdded(character: Model): void {
+		const rootPart = character.WaitForChild("HumanoidRootPart") as BasePart;
+
+		const humanoid = character.WaitForChild("Humanoid") as Humanoid;
+		humanoid.EvaluateStateMachine = false;
+
+		humanoid.Died.Connect(() => {
+			print("Humanoid died");
+		});
+
+		this.setupControllerManager(character, rootPart, humanoid);
+	}
+
+	private onMovementCharacterDied(player: Player): void {
+		task.delay(Players.RespawnTime, () => {
+			player.LoadCharacter();
+		});
 	}
 }
 

@@ -1,6 +1,7 @@
 import { Controller, OnStart, OnPhysics, OnRender } from "@flamework/core";
 import { ContextActionService, Players, UserInputService } from "@rbxts/services";
 import MovementCharacter from "client/classes/movement/MovementCharacter";
+import { Events } from "client/network";
 import CameraController from "./CameraController";
 
 @Controller()
@@ -14,7 +15,6 @@ class CharacterController implements OnStart, OnPhysics, OnRender {
 
 	onStart(): void {
 		this.player.CharacterAdded.Connect((character) => this.onCharacterAdded(character));
-		this.player.CharacterRemoving.Connect(() => this.onCharacterRemoving());
 
 		this.setupControls();
 	}
@@ -53,12 +53,29 @@ class CharacterController implements OnStart, OnPhysics, OnRender {
 
 	private onCharacterAdded(character: Model): void {
 		this.movementCharacter = MovementCharacter.fromModel(character);
-		print("MovementCharacter created");
-	}
+		if (!this.movementCharacter) {
+			warn("Failed to create MovementCharacter from model");
+			return;
+		}
 
-	private onCharacterRemoving(): void {
-		this.movementCharacter?.destroy();
-		this.movementCharacter = undefined;
+		const humanoid = this.movementCharacter.humanoid;
+		humanoid.HealthChanged.Connect((health) => {
+			if (health <= 0) humanoid.ChangeState(Enum.HumanoidStateType.Dead);
+		});
+
+		const rootPart = this.movementCharacter.rootPart;
+		character.DescendantRemoving.Connect((descendant) => {
+			if (descendant === rootPart) humanoid.TakeDamage(humanoid.MaxHealth);
+		});
+
+		humanoid.Died.Connect(() => {
+			this.movementCharacter?.destroy();
+			this.movementCharacter = undefined;
+
+			Events.MovementCharacterDied.fire();
+		});
+
+		print("MovementCharacter created");
 	}
 
 	private onJumpRequest(): void {
