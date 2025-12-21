@@ -1,4 +1,4 @@
-import { MovementStateContext, MovementStateType } from "shared/types/Movement";
+import { MovementStateContext, MovementStateType } from "shared/types/movement";
 
 abstract class MovementState {
 	abstract readonly stateType: MovementStateType;

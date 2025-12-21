@@ -1,4 +1,4 @@
-import { MovementStateType, WallDirection } from "shared/types/Movement";
+import { MovementStateType, WallDirection } from "shared/types/movement";
 import MovementState from "./MovementState";
 
 class FreefallState extends MovementState {

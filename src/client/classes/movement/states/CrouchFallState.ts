@@ -1,6 +1,6 @@
 import { RunService } from "@rbxts/services";
-import { Crouching } from "shared/constants/Movement";
-import { MovementStateType } from "shared/types/Movement";
+import { Crouching } from "shared/constants/movement";
+import { MovementStateType } from "shared/types/movement";
 import MovementState from "./MovementState";
 
 class CrouchFallState extends MovementState {

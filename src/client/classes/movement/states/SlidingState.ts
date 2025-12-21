@@ -1,5 +1,5 @@
-import { Physics, Sliding, Speeds } from "shared/constants/Movement";
-import { MovementStateType } from "shared/types/Movement";
+import { Physics, Sliding, Speeds } from "shared/constants/movement";
+import { MovementStateType } from "shared/types/movement";
 import MovementState from "./MovementState";
 
 class SlidingState extends MovementState {

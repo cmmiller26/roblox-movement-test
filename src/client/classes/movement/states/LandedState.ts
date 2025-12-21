@@ -1,5 +1,5 @@
-import { Physics } from "shared/constants/Movement";
-import { MovementStateType } from "shared/types/Movement";
+import { Physics } from "shared/constants/movement";
+import { MovementStateType } from "shared/types/movement";
 import MovementState from "./MovementState";
 
 class LandedState extends MovementState {

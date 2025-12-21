@@ -1,5 +1,5 @@
-import { Jumping } from "shared/constants/Movement";
-import { MovementStateType } from "shared/types/Movement";
+import { Jumping } from "shared/constants/movement";
+import { MovementStateType } from "shared/types/movement";
 import MovementState from "./MovementState";
 
 class JumpingState extends MovementState {

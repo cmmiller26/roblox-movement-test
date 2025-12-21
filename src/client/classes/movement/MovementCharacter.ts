@@ -1,7 +1,7 @@
 import Gizmos from "@rbxts/gizmos";
 import { TweenService, Workspace } from "@rbxts/services";
-import { AirControl, Crouching, Detection, Jumping, Sliding, Speeds, WallRunning } from "shared/constants/Movement";
-import { MovementStateContext, MovementStateType, CollisionPart, WallDirection } from "shared/types/Movement";
+import { AirControl, Crouching, Detection, Jumping, Sliding, Speeds, WallRunning } from "shared/constants/movement";
+import { MovementStateContext, MovementStateType, CollisionPart, WallDirection } from "shared/types/movement";
 import MovementStateMachine from "./MovementStateMachine";
 
 class MovementCharacter implements MovementStateContext {

@@ -1,5 +1,5 @@
-import { Speeds } from "shared/constants/Movement";
-import { MovementStateType } from "shared/types/Movement";
+import { Speeds } from "shared/constants/movement";
+import { MovementStateType } from "shared/types/movement";
 import MovementState from "./MovementState";
 
 class WalkingState extends MovementState {

@@ -1,6 +1,6 @@
 import { Workspace } from "@rbxts/services";
-import { Speeds, WallRunning } from "shared/constants/Movement";
-import { MovementStateType, WallDirection } from "shared/types/Movement";
+import { Speeds, WallRunning } from "shared/constants/movement";
+import { MovementStateType, WallDirection } from "shared/types/movement";
 import MovementState from "./MovementState";
 
 class WallRunningState extends MovementState {
