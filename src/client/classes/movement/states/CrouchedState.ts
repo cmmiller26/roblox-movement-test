@@ -8,7 +8,7 @@ class CrouchedState extends MovementState {
 	enter(prevStateType: MovementStateType) {
 		if (!this.context.groundSensor.SensedPart) return MovementStateType.CrouchFall;
 
-		if (this.context.isAtSpeed(Speeds.RUNNING)) {
+		if (this.context.getToCrouch() && this.context.isAtSpeed(Speeds.RUNNING)) {
 			this.applySlidingImpulse(this.context.rootPart);
 			return MovementStateType.Sliding;
 		}
