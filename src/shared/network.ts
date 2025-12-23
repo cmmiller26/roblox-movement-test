@@ -1,7 +1,7 @@
 import { Networking } from "@flamework/networking";
 
 interface ClientToServerEvents {
-	MovementCharacterDied(): void;
+	CharacterDied(): void;
 }
 
 interface ServerToClientEvents {}

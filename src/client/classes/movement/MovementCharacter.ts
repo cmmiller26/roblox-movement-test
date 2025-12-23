@@ -1,7 +1,13 @@
 import Gizmos from "@rbxts/gizmos";
 import { TweenService, Workspace } from "@rbxts/services";
 import { AirControl, Crouching, Detection, Jumping, Sliding, Speeds, WallRunning } from "shared/constants/movement";
-import { MovementStateContext, MovementStateType, CollisionPart, WallDirection } from "shared/types/movement";
+import {
+	MovementStateContext,
+	MovementStateType,
+	CollisionPart,
+	WallDirection,
+	isACollisionPart,
+} from "shared/types/movement";
 import MovementStateMachine from "./MovementStateMachine";
 
 class MovementCharacter implements MovementStateContext {
@@ -19,10 +25,12 @@ class MovementCharacter implements MovementStateContext {
 	private collisionPartC1Tween?: Tween;
 	private collisionPartSizeTween?: Tween;
 
-	static fromModel(character: Model): MovementCharacter | undefined {
-		const rootPart = character.WaitForChild("HumanoidRootPart") as BasePart;
-		const collisionPart = character.WaitForChild("CollisionPart") as CollisionPart;
-		const humanoid = character.WaitForChild("Humanoid") as Humanoid;
+	static create(character: Model, rootPart: BasePart, humanoid: Humanoid): MovementCharacter | undefined {
+		const collisionPart = character.WaitForChild("CollisionPart");
+		if (!collisionPart || !isACollisionPart(collisionPart)) {
+			warn("CollisionPart not found on character");
+			return undefined;
+		}
 
 		const controllerManager = character.FindFirstChildOfClass("ControllerManager");
 		if (!controllerManager) {

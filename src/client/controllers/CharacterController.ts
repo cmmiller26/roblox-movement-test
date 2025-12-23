@@ -7,6 +7,7 @@ import CameraController from "./CameraController";
 @Controller()
 class CharacterController implements OnStart, OnPhysics, OnRender {
 	private readonly player = Players.LocalPlayer;
+
 	private movementCharacter: MovementCharacter | undefined;
 
 	constructor(private cameraController: CameraController) {
@@ -52,28 +53,35 @@ class CharacterController implements OnStart, OnPhysics, OnRender {
 	}
 
 	private onCharacterAdded(character: Model): void {
-		this.movementCharacter = MovementCharacter.fromModel(character);
-		if (!this.movementCharacter) {
-			warn("Failed to create MovementCharacter from model");
+		const rootPart = character.WaitForChild("HumanoidRootPart");
+		if (!rootPart || !rootPart.IsA("BasePart")) {
+			warn("HumanoidRootPart not found on character");
+			return;
+		}
+		const humanoid = character.WaitForChild("Humanoid");
+		if (!humanoid || !humanoid.IsA("Humanoid")) {
+			warn("Humanoid not found on character");
 			return;
 		}
 
-		const humanoid = this.movementCharacter.humanoid;
 		humanoid.HealthChanged.Connect((health) => {
 			if (health <= 0) humanoid.ChangeState(Enum.HumanoidStateType.Dead);
 		});
-
-		const rootPart = this.movementCharacter.rootPart;
 		character.DescendantRemoving.Connect((descendant) => {
 			if (descendant === rootPart) humanoid.TakeDamage(humanoid.MaxHealth);
 		});
-
 		humanoid.Died.Connect(() => {
 			this.movementCharacter?.destroy();
 			this.movementCharacter = undefined;
 
-			Events.MovementCharacterDied.fire();
+			Events.CharacterDied.fire();
 		});
+
+		this.movementCharacter = MovementCharacter.create(character, rootPart, humanoid);
+		if (!this.movementCharacter) {
+			warn("Failed to create MovementCharacter from model");
+			return;
+		}
 
 		print("MovementCharacter created");
 	}

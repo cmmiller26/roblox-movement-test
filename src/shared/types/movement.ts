@@ -1,3 +1,5 @@
+import { Flamework } from "@flamework/core";
+
 export enum MovementStateType {
 	Crouched = "Crouched",
 	CrouchFall = "CrouchFall",
@@ -60,3 +62,5 @@ export enum WallDirection {
 	Left = "Left",
 	Right = "Right",
 }
+
+export const isACollisionPart = Flamework.createGuard<CollisionPart>();

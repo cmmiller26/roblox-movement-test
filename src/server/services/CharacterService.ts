@@ -9,7 +9,7 @@ class CharacterService implements OnStart {
 			player.CharacterAdded.Connect((character) => this.onCharacterAdded(character)),
 		);
 
-		Events.MovementCharacterDied.connect((player) => this.onMovementCharacterDied(player));
+		Events.CharacterDied.connect((player) => this.onCharacterDied(player));
 	}
 
 	private setupControllerManager(character: Model, rootPart: BasePart, humanoid: Humanoid): void {
@@ -61,19 +61,23 @@ class CharacterService implements OnStart {
 	}
 
 	private onCharacterAdded(character: Model): void {
-		const rootPart = character.WaitForChild("HumanoidRootPart") as BasePart;
+		const rootPart = character.WaitForChild("HumanoidRootPart");
+		if (!rootPart || !rootPart.IsA("BasePart")) {
+			warn("HumanoidRootPart not found on character");
+			return;
+		}
 
-		const humanoid = character.WaitForChild("Humanoid") as Humanoid;
+		const humanoid = character.WaitForChild("Humanoid");
+		if (!humanoid || !humanoid.IsA("Humanoid")) {
+			warn("Humanoid not found on character");
+			return;
+		}
 		humanoid.EvaluateStateMachine = false;
-
-		humanoid.Died.Connect(() => {
-			print("Humanoid died");
-		});
 
 		this.setupControllerManager(character, rootPart, humanoid);
 	}
 
-	private onMovementCharacterDied(player: Player): void {
+	private onCharacterDied(player: Player): void {
 		task.delay(Players.RespawnTime, () => {
 			player.LoadCharacter();
 		});
